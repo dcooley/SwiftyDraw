@@ -76,6 +76,9 @@ open class SwiftyDrawView: UIView {
     
     /// Determines whether paths being draw would be filled or stroked.
     public var shouldFillPath = false
+    
+    /// Determines whether the path should continue from the last touch point.
+    public var shouldContinuePath = false
 
     /// Determines whether responde to Apple Pencil interactions, like the Double tap for Apple Pencil 2 to switch tools.
     public var isPencilInteractive : Bool = true {
@@ -109,7 +112,7 @@ open class SwiftyDrawView: UIView {
     public  var drawingHistory: [DrawItem] = []
     public  var firstPoint: CGPoint = .zero      // created this variable
     public  var currentPoint: CGPoint = .zero     // made public
-    private var previousPoint: CGPoint = .zero
+    public var previousPoint: CGPoint = .zero     // made public
     private var previousPreviousPoint: CGPoint = .zero
     
     // For pencil interactions
@@ -188,10 +191,16 @@ open class SwiftyDrawView: UIView {
         guard delegate?.swiftyDraw(shouldBeginDrawingIn: self, using: touch) ?? true else { return }
         delegate?.swiftyDraw(didBeginDrawingIn: self, using: touch)
         
+        firstPoint = shouldContinuePath && previousPoint != .zero ? previousPoint : touch.location(in: self)
         setTouchPoints(touch, view: self)
-        firstPoint = touch.location(in: self)
+        
         let newLine = DrawItem(path: CGMutablePath(),
                            brush: Brush(color: brush.color.uiColor, width: brush.width, opacity: brush.opacity, blendMode: brush.blendMode), isFillPath: drawMode != .draw && drawMode != .line ? shouldFillPath : false)
+        if shouldContinuePath && currentPoint != .zero {
+            // draw a straight line between the end of the last touch point
+            // and this new touch point
+            newLine.path.addPath(createNewStraightPath())
+        }
         addLine(newLine)
     }
     
@@ -277,6 +286,10 @@ open class SwiftyDrawView: UIView {
     public func undo() {
         guard canUndo else { return }
         drawItems.removeLast()
+//        if shouldContinuePath {
+//            // need to re-set the touch points too
+//            previousPoint = firstPoint
+//        }
         setNeedsDisplay()
     }
     
