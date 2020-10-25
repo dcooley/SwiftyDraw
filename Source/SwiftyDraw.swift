@@ -191,7 +191,16 @@ open class SwiftyDrawView: UIView {
         guard delegate?.swiftyDraw(shouldBeginDrawingIn: self, using: touch) ?? true else { return }
         delegate?.swiftyDraw(didBeginDrawingIn: self, using: touch)
         
-        firstPoint = shouldContinuePath && previousPoint != .zero ? previousPoint : touch.location(in: self)
+//        print("starting -----------------")
+//        print("firstPoint: \(firstPoint)")
+//        print("currentPoint: \(currentPoint)")
+//        print("previousPoint: \(previousPoint)")
+//        print("previousPreviousPoint: \(previousPreviousPoint)")
+        
+        firstPoint = shouldContinuePath && currentPoint != .zero ? currentPoint : touch.location(in: self)
+        
+//        print("firstPoint updated: \(firstPoint)")
+        
         setTouchPoints(touch, view: self)
         
         let newLine = DrawItem(path: CGMutablePath(),
@@ -257,6 +266,13 @@ open class SwiftyDrawView: UIView {
     override open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard isEnabled, let touch = touches.first else { return }
         delegate?.swiftyDraw(didFinishDrawingIn: self, using: touch)
+        
+//        print("touches ended ----------------")
+//        print("firstPoint: \(firstPoint)")
+//        print("currentPoint: \(currentPoint)")
+//        print("previousPoint: \(previousPoint)")
+//        print("previousPreviousPoint: \(previousPreviousPoint)")
+        
     }
     
     /// touchedCancelled implementation
