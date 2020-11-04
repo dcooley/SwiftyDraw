@@ -79,6 +79,9 @@ open class SwiftyDrawView: UIView {
     
     /// Determines whether the path should continue from the last touch point.
     public var shouldContinuePath = false
+    
+    /// Determins whether the path should be drawn horizontally
+    public var shouldDrawHorizontalPath = false
 
     /// Determines whether responde to Apple Pencil interactions, like the Double tap for Apple Pencil 2 to switch tools.
     public var isPencilInteractive : Bool = true {
@@ -208,7 +211,11 @@ open class SwiftyDrawView: UIView {
         if shouldContinuePath && currentPoint != .zero {
             // draw a straight line between the end of the last touch point
             // and this new touch point
-            newLine.path.addPath(createNewStraightPath())
+            if shouldDrawHorizontalPath {
+                newLine.path.addPath(createNewHorizontalStraightPath())
+            } else {
+                newLine.path.addPath(createNewStraightPath())
+            }
         }
         addLine(newLine)
     }
@@ -229,7 +236,12 @@ open class SwiftyDrawView: UIView {
             setNeedsDisplay()
             let newLine = DrawItem(path: CGMutablePath(),
                                brush: Brush(color: brush.color.uiColor, width: brush.width, opacity: brush.opacity, blendMode: brush.blendMode), isFillPath: false)
-            newLine.path.addPath(createNewStraightPath())
+            //newLine.path.addPath(createNewStraightPath())
+            if shouldDrawHorizontalPath {
+                newLine.path.addPath(createNewHorizontalStraightPath())
+            } else {
+                newLine.path.addPath(createNewStraightPath())
+            }
             addLine(newLine)
             break
         case .draw:
@@ -346,6 +358,15 @@ open class SwiftyDrawView: UIView {
     private func createNewStraightPath() -> CGMutablePath {
         let pt1 : CGPoint = firstPoint
         let pt2 : CGPoint = currentPoint
+        let subPath = createStraightSubPath(pt1, mid2: pt2)
+        let newPath = addSubPathToPath(subPath)
+        return newPath
+    }
+    
+    private func createNewHorizontalStraightPath() -> CGMutablePath {
+        let pt1 : CGPoint = firstPoint
+        var pt2 : CGPoint = currentPoint
+        pt2.y = pt1.y
         let subPath = createStraightSubPath(pt1, mid2: pt2)
         let newPath = addSubPathToPath(subPath)
         return newPath
