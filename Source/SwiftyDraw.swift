@@ -80,8 +80,9 @@ open class SwiftyDrawView: UIView {
     /// Determines whether the path should continue from the last touch point.
     public var shouldContinuePath = false
     
-    /// Determins whether the path should be drawn horizontally
-    public var shouldDrawHorizontalPath = false
+    /// Determins whether the path should be drawn horizontally / verticaly
+    public enum LineDirection { case any, horizontal, vertical }
+    public var lineDirection: LineDirection = .any
 
     /// Determines whether responde to Apple Pencil interactions, like the Double tap for Apple Pencil 2 to switch tools.
     public var isPencilInteractive : Bool = true {
@@ -211,8 +212,10 @@ open class SwiftyDrawView: UIView {
         if shouldContinuePath && currentPoint != .zero {
             // draw a straight line between the end of the last touch point
             // and this new touch point
-            if shouldDrawHorizontalPath {
+            if lineDirection == .horizontal {
                 newLine.path.addPath(createNewHorizontalStraightPath())
+            } else if lineDirection == .vertical {
+                newLine.path.addPath(createNewVerticalStraightPath())
             } else {
                 newLine.path.addPath(createNewStraightPath())
             }
@@ -237,8 +240,10 @@ open class SwiftyDrawView: UIView {
             let newLine = DrawItem(path: CGMutablePath(),
                                brush: Brush(color: brush.color.uiColor, width: brush.width, opacity: brush.opacity, blendMode: brush.blendMode), isFillPath: false)
             //newLine.path.addPath(createNewStraightPath())
-            if shouldDrawHorizontalPath {
+            if lineDirection == .horizontal {
                 newLine.path.addPath(createNewHorizontalStraightPath())
+            } else if lineDirection == .vertical {
+                newLine.path.addPath(createNewVerticalStraightPath())
             } else {
                 newLine.path.addPath(createNewStraightPath())
             }
@@ -367,6 +372,15 @@ open class SwiftyDrawView: UIView {
         let pt1 : CGPoint = firstPoint
         var pt2 : CGPoint = currentPoint
         pt2.y = pt1.y
+        let subPath = createStraightSubPath(pt1, mid2: pt2)
+        let newPath = addSubPathToPath(subPath)
+        return newPath
+    }
+    
+    private func createNewVerticalStraightPath() -> CGMutablePath {
+        let pt1 : CGPoint = firstPoint
+        var pt2 : CGPoint = currentPoint
+        pt2.x = pt1.x
         let subPath = createStraightSubPath(pt1, mid2: pt2)
         let newPath = addSubPathToPath(subPath)
         return newPath
